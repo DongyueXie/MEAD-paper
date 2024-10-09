@@ -28,7 +28,9 @@ simu_study = function(ref,
                       n_bulk_for_cor = 100,
                       gamma_shape = 5,
                       bulk_bias_sd = 0.1,
-                      nfold = 10
+                      nfold = 10,
+                      beta_tilde_transformation = list(method='softplus',a=1000)
+
 ){
 
 
@@ -248,7 +250,8 @@ simu_study = function(ref,
                        Vg=V,
                        w=1,
                        hc.type='hc3',
-                       R01=NULL)
+                       R01=NULL,
+                       beta_tilde_transformation = beta_tilde_transformation)
     p_hat[,,reps] = fit.err$p_hat
     p_hat_se[,,reps] = fit.err$p_hat_se
 
@@ -258,7 +261,8 @@ simu_study = function(ref,
                           X=X[marker.idx,],
                           Vg = V[marker.idx,],
                           w=1,
-                          calc_var = FALSE)
+                          calc_var = FALSE,
+                          beta_tilde_transformation = beta_tilde_transformation)
     p_hat_marker[,,reps] = fit.marker$p_hat
 
 
@@ -271,7 +275,8 @@ simu_study = function(ref,
                               Vg=V,
                               w=w,
                               hc.type='hc3',
-                              R01=NULL)
+                              R01=NULL,
+                              beta_tilde_transformation = beta_tilde_transformation)
     p_hat_weight[,,reps] = fit.mead.nocor$p_hat
     p_hat_weight_se[,,reps] = fit.mead.nocor$p_hat_se
 
@@ -281,7 +286,8 @@ simu_study = function(ref,
                                  Vg=V,
                                  w=w,
                                  hc.type='hc3',
-                                 R01=R01_true)
+                                 R01=R01_true,
+                                 beta_tilde_transformation = beta_tilde_transformation)
     p_hat_weight_se_knowncor[,,reps] = fit.mead.knowncor$p_hat_se
 
     fit.mead.cor01 = MEAD_est(y=y,
@@ -289,7 +295,8 @@ simu_study = function(ref,
                               Vg=V,
                               w=w,
                               hc.type='hc3',
-                              R01=R01_01)
+                              R01=R01_01,
+                              beta_tilde_transformation = beta_tilde_transformation)
     p_hat_weight_se_cor01[,,reps] = fit.mead.cor01$p_hat_se
 
 
@@ -298,7 +305,8 @@ simu_study = function(ref,
                               Vg=V,
                               w=w,
                               hc.type='hc3',
-                              R01=R01_03)
+                              R01=R01_03,
+                              beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cor03[,,reps] = fit.mead.cor03$p_hat_se
 
@@ -307,7 +315,8 @@ simu_study = function(ref,
                               Vg=V,
                               w=w,
                               hc.type='hc3',
-                              R01=R01_05)
+                              R01=R01_05,
+                              beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cor05[,,reps] = fit.mead.cor05$p_hat_se
 
@@ -320,7 +329,8 @@ simu_study = function(ref,
                                     w=w,
                                     hc.type='cv_indep',
                                     R01=R01_true,
-                                    folds=folds)
+                                    folds=folds,
+                                    beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cv_knowncor[,,reps] = fit.mead.cv.knowncor$p_hat_se
 
@@ -330,7 +340,8 @@ simu_study = function(ref,
                                  w=w,
                                  hc.type='cv_indep',
                                  R01=R01_01,
-                                 folds=folds)
+                                 folds=folds,
+                                 beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cv_cor01[,,reps] = fit.mead.cv.cor01$p_hat_se
 
@@ -342,7 +353,8 @@ simu_study = function(ref,
                                  w=w,
                                  hc.type='cv_indep',
                                  R01=R01_03,
-                                 folds=folds)
+                                 folds=folds,
+                                 beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cv_cor03[,,reps] = fit.mead.cv.cor03$p_hat_se
 
@@ -353,7 +365,8 @@ simu_study = function(ref,
                                  w=w,
                                  hc.type='cv_indep',
                                  R01=R01_05,
-                                 folds=folds)
+                                 folds=folds,
+                                 beta_tilde_transformation = beta_tilde_transformation)
 
     p_hat_weight_se_cv_cor05[,,reps] = fit.mead.cv.cor05$p_hat_se
 

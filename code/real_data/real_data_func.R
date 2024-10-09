@@ -1,4 +1,4 @@
-source('CIBERSORT.R')
+source('~/MEAD-paper/code/CIBERSORT.R')
 
 # This function takes generated ref, p, groups as input
 

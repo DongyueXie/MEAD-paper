@@ -2,7 +2,7 @@
 ###### run real data analysis ##########
 
 source('real_data_func.R')
-indis_ref = readRDS('indis_ref_12400by6by97.rds')
+indis_ref = readRDS('~/MEAD-paper/data/real_data/indis_ref_12400by6by97.rds')
 
 
 n_rep = 100
@@ -395,7 +395,13 @@ datax$Method = factor(datax$Method,levels = unique(datax$Method))
 ggplot(datax, aes(x=Method, y=Coverage, group=Cell.type)) +
   geom_hline(yintercept = 0.95,linetype = "dashed")+geom_point(aes(shape=Cell.type,color = Cell.type))+
   theme(panel.grid.minor = element_blank(),axis.text.x = element_text(size = 11),axis.text.y = element_text(size = 11))
-
+ggplot(datax, aes(x = Method, y = Coverage, fill = Cell.type)) +
+  geom_bar(stat = "identity", position = "dodge") +  # Create grouped bars
+  geom_hline(yintercept = 0.95, linetype = "dashed", color = "black") +  # Add a dashed horizontal line at Coverage = 0.95
+  labs(x = "Method", y = "Coverage", fill = "Cell Type") +  # Set axis labels and legend title
+  theme_minimal() +  # Use a minimal theme for a cleaner look
+  scale_fill_brewer(palette = "PiYG") +
+  coord_cartesian(ylim = c(min(datax$Coverage),1))
 
 
 ###############################################################################
@@ -536,8 +542,8 @@ get_coverage_for_one_rep = function(p_hat,p_hat_se,true_p,alpha = 0.05){
 
   return(list(lower=lower_array,upper = upper_array,true_p = true_p))
 }
-res <- readRDS("F:/mead_paper/deconference/output/manuscript/real/my/add_bulk_bias/neuron_ref11_rep100_bulk86_dirichlet5_corfdr005_null.rds")
-iter=3
+res <- readRDS("output/manuscript/real/my/add_bulk_bias/neuron_ref11_rep100_bulk86_dirichlet5_corfdr03_null.rds")
+iter=9
 lu = get_coverage_for_one_rep(res$my_fit[[iter]]$p_hat,res$my_fit[[iter]]$p_hat_se,res$rep_info[[iter]]$b)
 
 library(ggplot2)

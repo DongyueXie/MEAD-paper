@@ -5,7 +5,7 @@
 
 source('simulation_func.R')
 
-xin = readRDS('xin_ref_sigma9496.rds')
+xin = readRDS('~/MEAD-paper/data/simulation/xin_ref_sigma9496.rds')
 ref = xin$ref
 sigma2 = xin$sigma2
 set.seed(12345)
