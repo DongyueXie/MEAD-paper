@@ -1,13 +1,6 @@
 ########### Create bulk data ################
 xin_raw <- readRDS("~/MEAD-paper/data/real_data_platform/xin_raw.rds")
-dim(xin_raw)
-unique(xin_raw$individual)
-unique(xin_raw$cell_type)
-table(xin_raw$individual,xin_raw$cell_type)
 # create bulk data
-# remove individuals who has at least one cell type missing totally
-indis_remove = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
-# get bulk data
 indis = unique(xin_raw$individual)
 bulk = c()
 for(ind in indis){
@@ -16,12 +9,9 @@ for(ind in indis){
   bulk = cbind(bulk, rowSums(xin_raw@assays$data$counts[,idx]))
 }
 colnames(bulk) = indis
-# remove individuals
-bulk = bulk[,-match(indis_remove,indis)]
 
 true_p = table(xin_raw$individual,xin_raw$cell_type)
 true_p = true_p / rowSums(true_p)
-true_p = true_p[-match(indis_remove,rownames(true_p)),]
 
 ##########Fit MuSiC###############
 library(MuSiC)
@@ -30,10 +20,6 @@ dim(XinT2D.sce)
 XinT2D.construct.full = bulk_construct(XinT2D.sce, clusters = 'cellType', samples = 'SubjectName')
 XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
 XinT2D.construct.full$prop.real = XinT2D.construct.full$prop.real[,c(2,1,3,4)]
-
-XinT2D.construct.full$bulk.counts = XinT2D.construct.full$bulk.counts[,-match(indis_remove,colnames(XinT2D.construct.full$bulk.counts))]
-XinT2D.construct.full$num.real = XinT2D.construct.full$num.real[-match(indis_remove,rownames(XinT2D.construct.full$num.real)),]
-XinT2D.construct.full$prop.real = XinT2D.construct.full$prop.real[-match(indis_remove,rownames(XinT2D.construct.full$prop.real)),]
 
 EMTAB.sce <- readRDS("~/MEAD-paper/data/real_data_platform/EMTABsce_healthy.rds")
 Est.prop.Xin = music_prop(bulk.mtx = XinT2D.construct.full$bulk.counts, sc.sce = EMTAB.sce,
@@ -45,8 +31,6 @@ Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
                            data.matrix(Est.prop.Xin$Est.prop.allgene)),
            method.name = c('MuSiC', 'NNLS'))
 
-# extract gene weights
-dim(Est.prop.Xin$Weight.gene)
 W = Est.prop.Xin$Weight.gene
 
 ########### Create reference data ################
@@ -110,7 +94,7 @@ p4 = ggplot(df, aes(Var1, Var2, fill = p)) +
 
 gridExtra::grid.arrange(p1,p4,p3,nrow=3, heights = c(1, 1, 1.3))
 
-#############rmse, mad#################
+#############rmse, mad, R#################
 sqrt(mean((t(fitted_default$p_hat)-data.matrix(XinT2D.construct.full$prop.real))^2))
 sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.weighted)-data.matrix(XinT2D.construct.full$prop.real))^2))
 sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.construct.full$prop.real))^2))
@@ -123,16 +107,15 @@ sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.constru
 get_coverage_for_one_rep = function(p_hat,p_hat_se,true_p,alpha = 0.05){
   lower_array = p_hat - qnorm(1-alpha/2)*p_hat_se
   lower_array = ifelse(lower_array>0,lower_array,0)
-
+  
   upper_array = p_hat + qnorm(1-alpha/2)*p_hat_se
   upper_array = ifelse(upper_array>1,1,upper_array)
-
+  
   return(list(lower=lower_array,upper = upper_array,true_p = true_p))
 }
 
 indi_names = rownames(true_p)
 
-## default weights
 phat = t(fitted_default$p_hat)[match(indi_names,rownames(t(fitted_default$p_hat))),]
 phat_se = t(fitted_default$p_hat_se)[match(indi_names,rownames(t(fitted_default$p_hat_se))),]
 lu = get_coverage_for_one_rep(phat,phat_se,true_p)
@@ -144,13 +127,13 @@ mean(covered)
 plot_list = list()
 celltypes = c('alpha', 'beta', 'delta', 'gamma')
 for(k in 1:4){
-
+  
   datax = data.frame(lower = lu$lower[,k],
                      upper = lu$upper[,k],
                      true_p = lu$true_p[,k])
   datax = datax[order(datax$true_p),]
-  datax$indi = 1:14
-
+  datax$indi = 1:18
+  
   plot_list[[k]] = ggplot(datax,aes(x = indi,y=true_p))+
     geom_line()+
     geom_point(size = 1,color = 'red')+
@@ -170,16 +153,7 @@ gridExtra::grid.arrange(grobs=plot_list,ncol=2)
 
 
 fitted_default_softplus = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w,beta_tilde_transformation = list(method='softplus',a=1e10))
-t(fitted_default_softplus$p_hat)
-true_p
-sqrt(mean((t(fitted_default_softplus$p_hat)-true_p)^2))
-fitted_default_softplus$p_hat_se
-
-
-
 indi_names = rownames(true_p)
-
-## default weights
 phat = t(fitted_default_softplus$p_hat)[match(indi_names,rownames(t(fitted_default_softplus$p_hat))),]
 phat_se = t(fitted_default_softplus$p_hat_se)[match(indi_names,rownames(t(fitted_default_softplus$p_hat_se))),]
 lu = get_coverage_for_one_rep(phat,phat_se,true_p)
@@ -191,13 +165,13 @@ mean(covered)
 plot_list = list()
 celltypes = c('alpha', 'beta', 'delta', 'gamma')
 for(k in 1:4){
-
+  
   datax = data.frame(lower = lu$lower[,k],
                      upper = lu$upper[,k],
                      true_p = lu$true_p[,k])
   datax = datax[order(datax$true_p),]
-  datax$indi = 1:14
-
+  datax$indi = 1:18
+  
   plot_list[[k]] = ggplot(datax,aes(x = indi,y=true_p))+
     geom_line()+
     geom_point(size = 1,color = 'red')+
