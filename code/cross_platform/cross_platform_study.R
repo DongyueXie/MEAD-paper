@@ -16,12 +16,8 @@ for(ind in indis){
   bulk = cbind(bulk, rowSums(xin_raw@assays$data$counts[,idx]))
 }
 colnames(bulk) = indis
-head(bulk)
-dim(bulk)
 # remove individuals
 bulk = bulk[,-match(indis_remove,indis)]
-head(bulk)
-dim(bulk)
 
 true_p = table(xin_raw$individual,xin_raw$cell_type)
 true_p = true_p / rowSums(true_p)
@@ -49,9 +45,6 @@ Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
                            data.matrix(Est.prop.Xin$Est.prop.allgene)),
            method.name = c('MuSiC', 'NNLS'))
 
-sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.weighted)-true_p)^2))
-sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-true_p)^2))
-
 # extract gene weights
 dim(Est.prop.Xin$Weight.gene)
 W = Est.prop.Xin$Weight.gene
@@ -67,7 +60,6 @@ refs = MEAD_getX(datax$ref,datax$cell_types,datax$individuals)
 sum(rowSums(refs$X)!=0)
 
 fitted_default = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w)
-sqrt(mean((t(fitted_default$p_hat)-true_p)^2))
 
 ########## heat plot of RMSE############
 library(ggplot2)
@@ -119,13 +111,13 @@ p4 = ggplot(df, aes(Var1, Var2, fill = p)) +
 gridExtra::grid.arrange(p1,p4,p3,nrow=3, heights = c(1, 1, 1.3))
 
 #############rmse, mad#################
-sqrt(mean((t(fitted_default$p_hat)-true_p)^2))
-sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.weighted)-true_p)^2))
-sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-true_p)^2))
+sqrt(mean((t(fitted_default$p_hat)-data.matrix(XinT2D.construct.full$prop.real))^2))
+sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.weighted)-data.matrix(XinT2D.construct.full$prop.real))^2))
+sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.construct.full$prop.real))^2))
 
-(mean(abs(t(fitted_default$p_hat)-true_p)))
-(mean(abs(data.matrix(Est.prop.Xin$Est.prop.weighted)-true_p)))
-(mean(abs(data.matrix(Est.prop.Xin$Est.prop.allgene)-true_p)))
+(mean(abs(t(fitted_default$p_hat)-data.matrix(XinT2D.construct.full$prop.real))))
+(mean(abs(data.matrix(Est.prop.Xin$Est.prop.weighted)-data.matrix(XinT2D.construct.full$prop.real))))
+(mean(abs(data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.construct.full$prop.real))))
 
 ############## coverage ######################
 get_coverage_for_one_rep = function(p_hat,p_hat_se,true_p,alpha = 0.05){
