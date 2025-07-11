@@ -378,6 +378,21 @@ rmse = function(x,y){
   sqrt(mean((x-y)^2))
 }
 
+get_power_p = function(p_hat,p_hat_se,b_array){
+  
+  K = dim(p_hat)[1]
+  nb = dim(p_hat)[2]
+  z = array(dim = dim(p_hat))
+  for(i in 1:dim(z)[3]){
+    z[,,i] = (p_hat[,,i])/p_hat_se[,,i]
+    z[,,i][which(b_array[,,i])==0] = NA
+  }
+  crg = apply(z,c(1,2),function(z){round(mean(abs(z)>=1.96,na.rm=T),3)})
+  rownames(crg) = paste('cell',1:K)
+  colnames(crg) = paste('bulk',1:nb)
+  crg
+}
+
 get_coverage_p = function(p_hat,p_hat_se,b_array){
 
   K = dim(p_hat)[1]
