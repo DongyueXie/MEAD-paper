@@ -43,8 +43,13 @@ refs = MEAD_getX(datax$ref,datax$cell_types,datax$individuals)
 # total numer of genes used
 sum(rowSums(refs$X)!=0)
 
+# get correlated genes
+R01_01 = get_R01(datax$bulk,0.1)
+R01_03 = get_R01(datax$bulk,0.3)
+R01_05 = get_R01(datax$bulk,0.5)
+
 # fitted_default = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w)
-fitted_default = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w,beta_tilde_transformation = list(method='softplus',a=10))
+fitted_default = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w,R01=R01_05)
 
 ########## fit cibersort############
 source('code/CIBERSORT.R')
@@ -142,6 +147,17 @@ sqrt(mean((data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.constru
 (mean(abs(data.matrix(Est.prop.Xin$Est.prop.weighted)-data.matrix(XinT2D.construct.full$prop.real))))
 (mean(abs(data.matrix(Est.prop.Xin$Est.prop.allgene)-data.matrix(XinT2D.construct.full$prop.real))))
 
+
+################two group difference rmse ################
+true_diff = colMeans(XinT2D.construct.full$prop.real[1:12,]) - colMeans(XinT2D.construct.full$prop.real[13:18,])
+mead_diff = rowMeans(fitted_default$p_hat[,1:12]) - rowMeans(fitted_default$p_hat[,13:18])
+music_diff = colMeans(data.matrix(Est.prop.Xin$Est.prop.weighted)[1:12,]) - colMeans(data.matrix(Est.prop.Xin$Est.prop.weighted)[13:18,])
+nnls_diff = colMeans(data.matrix(Est.prop.Xin$Est.prop.allgene)[1:12,]) - colMeans(data.matrix(Est.prop.Xin$Est.prop.allgene)[13:18,])
+cibersort_diff = colMeans(fit_cibersort[1:12,]) - colMeans(fit_cibersort[13:18,])
+
+sqrt(mean(()^2))
+sqrt(mean(()^2))
+sqrt(mean(()^2))
 ############## coverage ######################
 get_coverage_for_one_rep = function(p_hat,p_hat_se,true_p,alpha = 0.05){
   lower_array = p_hat - qnorm(1-alpha/2)*p_hat_se
@@ -167,18 +183,18 @@ plot_list = list()
 celltypes = c('alpha', 'beta', 'delta', 'gamma')
 for(k in 1:4){
 
-  datax = data.frame(lower = lu$lower[,k],
+  datax_temp = data.frame(lower = lu$lower[,k],
                      upper = lu$upper[,k],
                      true_p = lu$true_p[,k])
-  datax = datax[order(datax$true_p),]
-  datax$indi = 1:18
+  datax_temp = datax_temp[order(datax_temp$true_p),]
+  datax_temp$indi = 1:18
 
-  plot_list[[k]] = ggplot(datax,aes(x = indi,y=true_p))+
+  plot_list[[k]] = ggplot(datax_temp,aes(x = indi,y=true_p))+
     geom_line()+
     geom_point(size = 1,color = 'red')+
     xlab("Sorted bulk samples") +
     ylab("p")+
-    geom_ribbon(data=datax,aes(ymin=lower,ymax=upper),alpha=0.3)+
+    geom_ribbon(data=datax_temp,aes(ymin=lower,ymax=upper),alpha=0.3)+
     ggtitle(paste('Cell type:', celltypes[k]))+
     ylim(0,1)
 }
@@ -191,7 +207,7 @@ gridExtra::grid.arrange(grobs=plot_list,ncol=2)
 ################################
 
 
-fitted_default_softplus = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w,beta_tilde_transformation = list(method='softplus',a=1e10))
+fitted_default_softplus = MEAD_est(datax$bulk,refs$X,refs$V,w=refs$w,R01 = R01_05,beta_tilde_transformation = list(method='softplus',a=10))
 indi_names = rownames(true_p)
 phat = t(fitted_default_softplus$p_hat)[match(indi_names,rownames(t(fitted_default_softplus$p_hat))),]
 phat_se = t(fitted_default_softplus$p_hat_se)[match(indi_names,rownames(t(fitted_default_softplus$p_hat_se))),]
@@ -205,18 +221,18 @@ plot_list = list()
 celltypes = c('alpha', 'beta', 'delta', 'gamma')
 for(k in 1:4){
 
-  datax = data.frame(lower = lu$lower[,k],
+  datax_temp = data.frame(lower = lu$lower[,k],
                      upper = lu$upper[,k],
                      true_p = lu$true_p[,k])
-  datax = datax[order(datax$true_p),]
-  datax$indi = 1:18
+  datax_temp = datax_temp[order(datax_temp$true_p),]
+  datax_temp$indi = 1:18
 
-  plot_list[[k]] = ggplot(datax,aes(x = indi,y=true_p))+
+  plot_list[[k]] = ggplot(datax_temp,aes(x = indi,y=true_p))+
     geom_line()+
     geom_point(size = 1,color = 'red')+
     xlab("Sorted bulk samples") +
     ylab("p")+
-    geom_ribbon(data=datax,aes(ymin=lower,ymax=upper),alpha=0.3)+
+    geom_ribbon(data=datax_temp,aes(ymin=lower,ymax=upper),alpha=0.3)+
     ggtitle(paste('Cell type:', celltypes[k]))+
     ylim(0,1)
 }
